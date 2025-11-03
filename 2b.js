@@ -31,7 +31,8 @@ const path = require('path');
 http.createServer((req, res) => {
   // req (request): 請求物件，包含客戶端發送的所有資訊（URL、標頭等）
   // res (response): 回應物件，用於向客戶端發送回應（HTML、狀態碼等）
-
+  console.log('使⽤者請求網址：', req.url);
+  const url = req.url;
   // ==========================================
   // 步驟 1: URL 路由與頁面分派
   // ==========================================
@@ -44,11 +45,16 @@ http.createServer((req, res) => {
 
   // Switch根據不同路由要寫的部分
 
-
-
-
-
-  
+  switch (url) { // 使⽤ switch 分⽀依 url 指定要載入的模板與 css
+    case '/': // 當訪問網站根⽬錄
+      filePath = '/index.ejs'; // 對應 index.ejs 模板
+      filecss = '/style.css'; // 對應 style.css
+    break;
+    case '/calculator': // 當訪問 /calculator 路徑
+      filePath = '/index2.ejs'; // 對應 index2.ejs 模板
+      filecss = '/style2.css'; // 對應 style2.css
+    break;
+}
 
   // ==========================================
   // 步驟 2: 判斷文件類型（提取副檔名）
@@ -63,8 +69,7 @@ http.createServer((req, res) => {
   //   path.extname('/index.ejs') → '.ejs'
   //   path.extname('/style.css') → '.css'
   //   path.extname('/script.js') → '.js'
-  const extname = (fileOtherFile === '') ? path.extname(filePath) : path.extname(fileOtherFile);
-
+  const extname = path.extname(url);
   // ==========================================
   // 步驟 3: 定義 MIME 類型映射表
   // ==========================================
@@ -86,6 +91,17 @@ http.createServer((req, res) => {
     '.svg': 'image/svg+xml',                    // SVG 向量圖形
     '.ico': 'image/x-icon'                      // 網站 favicon 圖示
   };
+
+    const mime = { // ⽤物件快速對照常⽤副檔名的回應類型
+    '.html': 'text/html; charset=utf-8', // HTML
+    '.js': 'text/javascript; charset=utf-8', // JavaScript
+    '.css': 'text/css; charset=utf-8', // CSS
+    '.png': 'image/png', // PNG 圖片
+    '.jpg': 'image/jpeg', // JPG 圖片（⽤ image/jpeg）
+    '.gif': 'image/gif', // GIF 圖片
+    '.ico': 'image/x-icon' // favicon.ico
+  };
+
 
   // ==========================================
   // 步驟 4: 查找對應的 Content-Type
@@ -110,7 +126,7 @@ http.createServer((req, res) => {
   // ------------------------------------------
   // 適用情況：extname === '.ejs'
   // 處理頁面：index.ejs, index2.ejs, index3.ejs
-  if (extname === '.ejs') {
+  if (extname === '.ejs' || url === '/' || url === '/calculator') {
 
     // 讀取 EJS 模板文件
     // 參數說明：
@@ -140,7 +156,7 @@ http.createServer((req, res) => {
       // 1. 解析 EJS 語法（如 <%= %>, <% %> 等）
       // 2. 執行嵌入的 JavaScript 代碼
       // 3. 將結果轉換成純 HTML 字串
-      const html = ejs.render(template);
+      const html = ejs.render(template, {stylePath: filecss});
 
       // 設定 HTTP 回應標頭
       // 狀態碼 200: OK（請求成功）
@@ -163,7 +179,8 @@ http.createServer((req, res) => {
     // 範例：
     //   '/style.css' → './style.css'
     //   '/script.js' → './script.js'
-    const staticFilePath = '.' + fileOtherFile;
+    const staticFilePath = '.' + url;
+    const contentType = mime[extname] || 'text/plain; charset=utf-8';
 
     // 讀取靜態文件
     // 注意：這裡「沒有」指定 'utf8' 編碼
@@ -179,34 +196,42 @@ http.createServer((req, res) => {
 
         // 當靜態資源載入失敗時（例如：請求不存在的文件或網址）
         // 不直接回傳錯誤訊息，而是顯示友善的 404 錯誤頁面（index3.ejs）
+        fs.readFile('./index3.ejs', 'utf8', (ejsErr, template) => {
 
         // 設定 HTTP 狀態碼 404（找不到資源）
-        res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
+          res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
+          if (ejsErr) {
 
         // 向客戶端發送 404 錯誤訊息
-        res.end('404 - 找不到文件：');
+            res.end('404 - 找不到文件：');
 
-      } else {
+          } else {
         // ------------------------------------------
         // 靜態文件讀取成功 → 直接發送文件內容
         // ------------------------------------------
-
+            const html = ejs.render(template, {stylePath: '/style3.css'});
+            res.end(html);
+      }
+    });
+      }else {
         // 設定 HTTP 狀態碼 200（成功）
         // Content-Type 根據文件副檔名自動設定（從 contentTypes 映射表查詢）
         // 例如：
         //   .css 檔案 → 'text/css; charset=utf-8'
         //   .js 檔案 → 'text/javascript; charset=utf-8'
         //   .png 檔案 → 'image/png'
-        res.writeHead(200, { 'Content-Type': contentType });
+          res.writeHead(200, { 'Content-Type': contentType });
 
         // 將文件內容發送給客戶端
         // content 變數的類型取決於文件：
         // - 文字文件（CSS、JS）：Buffer 會自動轉換為文字
         // - 二進制文件（圖片）：直接以 Buffer 形式傳送
-        res.end(content);
+          res.end(content);
       }
     });
   }
+
+
 
 // ==========================================
 // 啟動伺服器並開始監聽請求

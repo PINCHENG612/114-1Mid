@@ -72,6 +72,18 @@ console.log("==========================================");
 console.log("(a) 測試 getLowStock - 查詢低庫存商品");
 console.log("==========================================");
 
+function getLowStock(products) {
+  const lowStockItems = [];
+  for (let i = 0; i < products.length; i++) {
+    if (products[i].stock < 10) {
+      lowStockItems.push(products[i].name);
+    }
+  }
+  return lowStockItems;
+}
+
+getLowStock(products);
+
 const lowStockItems = getLowStock(products);
 console.log("庫存少於 10 的商品：", lowStockItems);
 console.log("預期結果：['mouse', 'monitor']");
@@ -93,6 +105,22 @@ console.log("");
 console.log("==========================================");
 console.log("(b) 測試 updateStock - 批次更新庫存");
 console.log("==========================================");
+
+function updateStock(products, updates) {
+  for (let i = 0; i < products.length; i++) {
+    const product = products[i];
+    for (const name in updates) {
+      if (product.name === name) {
+        product.stock = updates[name];
+      }
+    }
+  }
+
+  for (let i = 0; i < products.length; i++) {
+    console.log(products[i].name + " 的庫存：" + products[i].stock);
+  }
+  return products;
+}
 
 const updates = {
   mouse: 15,
