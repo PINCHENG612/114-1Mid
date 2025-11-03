@@ -89,7 +89,7 @@ http.createServer((req, res) => {
     '.jpg': 'image/jpg',                        // JPG/JPEG 圖片格式
     '.gif': 'image/gif',                        // GIF 動畫圖片
     '.svg': 'image/svg+xml',                    // SVG 向量圖形
-    '.ico': 'image/x-icon'                      
+    '.ico': 'image/x-icon'                       // 網站 favicon 圖示
   };
 
     const mime = { // ⽤物件快速對照常⽤副檔名的回應類型
